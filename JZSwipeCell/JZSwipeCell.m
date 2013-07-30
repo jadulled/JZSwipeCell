@@ -71,10 +71,13 @@ static CGFloat const kMaxBounceAmount = 8;
 	return self;
 }
 
-- (void)awakeFromNib
+- (id)initWithCoder:(NSCoder *)coder
 {
-	[super awakeFromNib];
-	[self configureCell];
+    self = [super initWithCoder:coder];
+    if (self) {
+        [self configureCell];
+    }
+    return self;
 }
 
 - (void)prepareForReuse
@@ -119,9 +122,6 @@ static CGFloat const kMaxBounceAmount = 8;
 - (void)configureCell
 {
 	self.selectionStyle = UITableViewCellSelectionStyleNone;
-	
-	if (!self.contentView.backgroundColor)
-		self.contentView.backgroundColor = [UIColor whiteColor];
 	
 	if (!self.icon)
 	{
@@ -173,8 +173,6 @@ static CGFloat const kMaxBounceAmount = 8;
 		case UIGestureRecognizerStateChanged:
 			self.contentView.center = CGPointMake(self.dragStart + translatedPoint.x, self.contentView.center.y);
 			CGFloat diff = translatedPoint.x;
-			
-			JZSwipeType originalSwipe = self.currentSwipe;
 			
 			if (diff > 0)
 			{
@@ -240,13 +238,6 @@ static CGFloat const kMaxBounceAmount = 8;
 					self.icon.alpha = 1;
 				}
 			}
-			
-			if (originalSwipe != self.currentSwipe)
-			{
-				if ([self.delegate respondsToSelector:@selector(swipeCell:swipeTypeChangedFrom:to:)])
-					[self.delegate swipeCell:self swipeTypeChangedFrom:originalSwipe to:self.currentSwipe];
-			}
-			
 			break;
 		case UIGestureRecognizerStateEnded:
 			if (self.currentSwipe != JZSwipeTypeNone)
@@ -268,18 +259,18 @@ static CGFloat const kMaxBounceAmount = 8;
 	CGFloat newIconCenterX = 0;
 	CGFloat newViewCenterX = 0;
 	CGFloat iconAlpha = 1;
-
+    
+    newViewCenterX = (self.contentView.frame.size.width / 2);
+    
 	if ([self isRightSwipeType:type])
 	{
 		self.icon.center = CGPointMake(self.contentView.center.x - ((self.contentView.frame.size.width / 2) + (self.icon.frame.size.width / 2) + kIconHorizontalPadding), self.contentView.frame.size.height / 2);
 		newIconCenterX = self.frame.size.width + (self.icon.frame.size.width / 2) + kIconHorizontalPadding;
-		newViewCenterX = newIconCenterX + (self.contentView.frame.size.width / 2) + (self.icon.frame.size.width / 2) + kIconHorizontalPadding;
 	}
 	else if ([self isLeftSwipeType:type])
 	{
 		self.icon.center = CGPointMake(self.contentView.center.x + (self.contentView.frame.size.width / 2) + (self.icon.frame.size.width / 2) + kIconHorizontalPadding, self.contentView.frame.size.height / 2);
 		newIconCenterX = -((self.icon.frame.size.width / 2) + kIconHorizontalPadding);
-		newViewCenterX = newIconCenterX - ((self.contentView.frame.size.width / 2) + (self.icon.frame.size.width / 2) + kIconHorizontalPadding);
 	}
 	else
 	{
@@ -289,10 +280,11 @@ static CGFloat const kMaxBounceAmount = 8;
 		iconAlpha = 0;
 	}
 	
+    
+    self.icon.center = CGPointMake(newIconCenterX, self.contentView.frame.size.height / 2);
 	[UIView animateWithDuration:0.25 delay:0
 						options:UIViewAnimationOptionCurveLinear
 					 animations:^{
-						 self.icon.center = CGPointMake(newIconCenterX, self.contentView.frame.size.height / 2);
 						 self.contentView.center = CGPointMake(newViewCenterX, self.contentView.center.y);
 						 self.icon.alpha = iconAlpha;
 					 } completion:^(BOOL finished) {
@@ -350,6 +342,10 @@ static CGFloat const kMaxBounceAmount = 8;
 - (BOOL)isLeftSwipeType:(JZSwipeType)type
 {
 	return type == JZSwipeTypeShortLeft || type == JZSwipeTypeLongLeft;
+}
+
+- (void)enableSwipeGesture:(BOOL)enable {
+    self.gesture.enabled = enable;
 }
 
 @end
